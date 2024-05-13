@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Radu Badea - Șah</title>
+    <link rel="icon" type="image/svg" href="img/icons/favicon.svg" />
+    <link rel="stylesheet" id="chessboard-css" href="css/chessboard.css" />
+    <link rel="stylesheet" href="css/board.css" />
+</head>
+
+<body bgcolor="#000000">
+    <div class="content">
+    	<span align="center">
+            <h2 align="center" style="color:#ffffff">Jocul meu de șah</h2>
+            <br />
+        </span>
+            <div class="chess-area">
+                <div class="board-table">
+                    <div id="board-top-controls" class="top-controls">
+                        <div id="game-promotion" class="promotion hidden">
+                            <span figure="q">Regina</span>
+                            <span figure="b">Nebun</span>
+                            <span figure="n">Cal</span>
+                            <span figure="r">Tura</span>
+                        </div>
+                        <div id="board-resign-game-area" class="popup hidden">
+                            <span class="close"></span>
+                            <label>Vrei să renunți?</label>
+                            <button class="yes">Da</button>
+                            <button class="no">Nu</button>
+                        </div>
+                    </div>
+                    <div id="board" class="board"></div>
+                    <div id="board-controls" class="controls">
+                        <div class="buttons">
+                            <button id="btn-engine-disable" title="Bot / Jucător (On/Off)">AI</button>
+                            <button id="btn-show-hint" title="Sfat"><i class="icon"></i></button>
+                            <button id="btn-take-back" class="disabled" title="Înapoi"><i class="icon"></i></button>
+                        </div>
+                        <div class="status">
+                            <span id="game-turn" style="display: none;">E rândul tau!</span>
+                            <span id="game-state" class="hidden"></span>
+                        </div>
+                        <div id="board-messages" class="messages hidden" style="display: none !important;"></div>
+                    </div>
+                </div>
+                <div class="board-settings">
+                    <div class="apex">
+                        <span class="label-history">Istoricul jocului</span>
+                        <div class="game-level" id="game-difficulty-option" title="Alege nivelul de dificultate al AI-ului">
+                            <span class="label">Nivel</span>
+                            <span class="value" id="game-difficulty-skill-value">10</span>
+                        </div>
+                    </div>
+                    <div class="game-difficulty hidden" id="game-difficulty-skill-settings">
+                        <span class="label">Alege nivelul de dificultate al AI-ului:</span>
+                        <span class="close"></span>
+                        <div class="values">
+                            <span class="1">1</span>
+                            <span class="2">2</span>
+                            <span class="3">3</span>
+                            <span class="4">4</span>
+                            <span class="5">5</span>
+                            <span class="6">6</span>
+                            <span class="7">7</span>
+                            <span class="8">8</span>
+                            <span class="9">9</span>
+                            <span class="10 selected">10</span>
+                            <span class="11">11</span>
+                            <span class="12">12</span>
+                            <span class="13">13</span>
+                            <span class="14">14</span>
+                            <span class="15">15</span>
+                            <span class="16">16</span>
+                            <span class="17">17</span>
+                            <span class="18">18</span>
+                            <span class="19">19</span>
+                            <span class="20">20</span>
+                        </div>
+                    </div>
+                    <div class="turns-history" id="game-turns-history">
+                        <ol></ol>
+                    </div>
+                    <div class="game-analyze hidden" id="game-analyze-string"></div>
+                    <div class="game-menu hidden" id="game-settings">
+                        <span class="label-choose-side">Alege culoarea</span>
+                        <span class="btn game-white-side selected" id="btn-choose-white-side"></span>
+                        <span class="btn game-black-side" id="btn-choose-black-side"></span>
+                    </div>
+                    <div class="tunes">
+                        <span id="btn-new-game" title="Începe un joc nou" class="btn-new-game">
+            <span class="icon"></span>
+                        <span class="label">Joc Nou</span>
+                        </span>
+                        <span id="btn-settings" title="Alege nivelul de dificultate al AI-ului" class="btn settings"></span>
+                        <span id="btn-resign" title="Renunță" class="btn resign"></span>
+                        <span id="btn-analyze" title="Evaluarea AI-ului" class="btn analyze">
+            <i class="icon"></i>
+          </span>
+                    </div>
+                    <div class="params">
+                        <div class="cell side" id="game-player-side" style="display: none;">
+                            <label>Culoarea ta:</label>
+                            <span class="white active">Alb</span>
+                            <span class="black">Negru</span>
+                        </div>
+                        <div class="cell first-turn" id="game-first-turn" style="display: none;">
+                            <label>Prima Mutare:</label>
+                            <span class="player active">Jucător</span>
+                            <span class="computer">Calculator</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chess-log"></div>
+    </div>
+
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script src="js/chess.min.js"></script>
+    <script src="js/ltpgnviewer.js"></script>
+
+    <script>
+        function is_touch_device() {
+            return 'ontouchstart' in window || navigator.maxTouchPoints;
+        };
+
+        function loadCss(cssId, cssHref) {
+            $('#' + cssId).attr('href', cssHref);
+        }
+
+        var mobileLibs = 8;
+        var desktopLibs = 8;
+
+        var isMobile = is_touch_device();
+
+        if (isMobile == true) {
+
+            var chess, board;
+
+            loadCss('chessboard-css', 'css/caustique-chessboard.css');
+
+            $.getScript('js/chessboard-caustique-min.js', initGameBoard('mobile'));
+            $.getScript('js/board-controls-side.js', initGameBoard('mobile'));
+            $.getScript('js/board-controls-bottom.js', initGameBoard('mobile'));
+            $.getScript('js/board-sets.js', initGameBoard('mobile'));
+
+            $.getScript('js/board-time.js', initGameBoard('mobile'));
+            $.getScript('js/board-actions.js', initGameBoard('mobile'));
+            $.getScript('js/board-actions-mobile.js', initGameBoard('mobile'));
+            $.getScript('js/board-init.js', initGameBoard('mobile'));
+
+        } else {
+
+            loadCss('chessboard-css', 'css/chessboard.css');
+
+            $.getScript('js/chessboard.min.js', initGameBoard('desktop'));
+            $.getScript('js/board-controls-side.js', initGameBoard('desktop'));
+            $.getScript('js/board-controls-bottom.js', initGameBoard('desktop'));
+            $.getScript('js/board-sets.js', initGameBoard('desktop'));
+
+            $.getScript('js/board-time.js', initGameBoard('desktop'));
+            $.getScript('js/board-actions.js', initGameBoard('desktop'));
+            $.getScript('js/board-actions-desktop.js', initGameBoard('desktop'));
+            $.getScript('js/board-init.js', initGameBoard('desktop'));
+
+        }
+
+        function initGameBoard(lib = false) {
+
+            if (lib == 'mobile') {
+                mobileLibs--;
+                if (mobileLibs == 0) {
+                    console.log('Mobile loaded');
+                    setTimeout(function() {
+                        setMobileBoard();
+                    }, 1000);
+                }
+            }
+
+            if (lib == 'desktop') {
+                desktopLibs--;
+                if (desktopLibs == 0) {
+                    console.log('Desktop loaded');
+                    setTimeout(function() {
+                        setDesktopBoard();
+                    }, 1000);
+                }
+            }
+
+        }
+    </script>
+
+</body>
+
+</html>
